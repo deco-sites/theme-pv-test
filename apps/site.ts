@@ -81,10 +81,10 @@ export default function Site({
   // 	new TextEncoder().encode(JSON.stringify(theme, null, 2))
   // )
 
-  if (theme?.props.page) {
-    console.log("has page");
-    theme.props.page = null;
-  }
+  // if (theme?.props.page) {
+  //   console.log("has page");
+  //   theme.props.page = null;
+  // }
 
   // Deno.writeFileSync(
   // 	'theme2.json',

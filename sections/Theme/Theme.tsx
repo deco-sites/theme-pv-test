@@ -278,4 +278,19 @@ export function Preview(props: Props) {
   );
 }
 
+export const loader = ({ page, ...props }: Props, req: Request) => {
+  if (
+    !page ||
+    !req.headers.get("referer") ||
+    !new URL(req.headers.get("referer")!).pathname.includes("live/previews")
+  ) {
+    return { ...props, page: null };
+  }
+
+  return {
+    ...props,
+    page,
+  };
+};
+
 export default Section;
