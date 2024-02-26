@@ -57,9 +57,10 @@ const color = (platform: string) => {
 
 let firstRun = true;
 
-export default function Site(
-  { theme, ...state }: Props,
-): A<Manifest, Props, [ReturnType<typeof commerce>]> {
+export default function Site({
+  theme,
+  ...state
+}: Props): A<Manifest, Props, [ReturnType<typeof commerce>]> {
   _platform = state.platform || state.commerce?.platform || "custom";
 
   // Prevent console.logging twice
@@ -67,10 +68,28 @@ export default function Site(
     firstRun = false;
     console.info(
       ` 🐁 ${rgb24("Storefront", color("deco"))} | ${
-        rgb24(_platform, color(_platform))
+        rgb24(
+          _platform,
+          color(_platform),
+        )
       } \n`,
     );
   }
+
+  // Deno.writeFileSync(
+  // 	'theme.json',
+  // 	new TextEncoder().encode(JSON.stringify(theme, null, 2))
+  // )
+
+  if (theme?.props.page) {
+    console.log("has page");
+    theme.props.page = null;
+  }
+
+  // Deno.writeFileSync(
+  // 	'theme2.json',
+  // 	new TextEncoder().encode(JSON.stringify(theme, null, 2))
+  // )
 
   return {
     state,

@@ -5,60 +5,11 @@
  * https://github.com/saadeghi/daisyui/blob/37bca23444bc9e4d304362c14b7088f9a08f1c74/src/docs/src/routes/theme-generator.svelte
  */
 import SiteTheme, { Font } from "apps/website/components/Theme.tsx";
+import { Page as PageType } from "deco/blocks/page.tsx";
+import { Section } from "deco/blocks/section.ts";
 import Color from "npm:colorjs.io";
-
-export interface ThemeColors {
-  /**
-   * @format color
-   * @title Base
-   */
-  "base-100"?: string;
-  /** @format color */
-  "primary"?: string;
-  /** @format color */
-  "secondary"?: string;
-  /**
-   * @title Accent
-   * @format color */
-  "tertiary"?: string;
-  /** @format color */
-  "neutral"?: string;
-  /** @format color */
-  "success"?: string;
-  /** @format color */
-  "warning"?: string;
-  /** @format color */
-  "error"?: string;
-  /** @format color */
-  "info"?: string;
-}
-
-export interface ComplementaryColors {
-  /** @format color */
-  "base-200"?: string;
-  /** @format color */
-  "base-300"?: string;
-  /** @format color */
-  "base-content"?: string;
-  /** @format color */
-  "primary-content"?: string;
-  /** @format color */
-  "secondary-content"?: string;
-  /**
-   * @title Accent Content
-   * @format color */
-  "tertiary-content"?: string;
-  /** @format color */
-  "neutral-content"?: string;
-  /** @format color */
-  "success-content"?: string;
-  /** @format color */
-  "warning-content"?: string;
-  /** @format color */
-  "error-content"?: string;
-  /** @format color */
-  "info-content"?: string;
-}
+import type { ComplementaryColors, ThemeColors } from "./theme.d.ts";
+import { defaultColors } from "./defaultColors.ts";
 
 export interface Button {
   /**
@@ -120,26 +71,35 @@ export interface Miscellaneous {
 
 export interface Props {
   /**
-   * @description Set the prefers-color-scheme media query. To support dark mode, create two instances of this block and set this option to light/dark in each instance
-   * @default light
+   * @description Cores principais do tema
    */
-  colorScheme?: "light" | "dark";
-  mainColors?: ThemeColors;
-  /** @description These will be auto-generated to a readable color if not set */
-  complementaryColors?: ComplementaryColors;
+  colors: ThemeColors;
+  /**
+   * @description Cores complementares do tema, cores não preenchidas serão
+   */
+  complementaryColors: ComplementaryColors;
+  /**
+   * @description Estilo dos botões
+   */
   buttonStyle?: Button;
+  /**
+   * @description Estilo de outros elementos
+   */
   otherStyles?: Miscellaneous;
+  /**
+   * @description Fonte do tema
+   */
   font?: Font;
+  /**
+   * @description Pagina de exemplo
+   */
+  page?: PageType;
 }
 
-type Theme =
-  & ThemeColors
-  & ComplementaryColors
-  & Button
-  & Miscellaneous;
+type Theme = ThemeColors & ComplementaryColors & Button & Miscellaneous;
 
-const darken = (color: string, percentage: number) =>
-  new Color(color).darken(percentage);
+const lighten = (color: string, percentage: number) =>
+  new Color(color).lighten(percentage);
 
 const isDark = (c: Color) =>
   c.contrast("black", "WCAG21") < c.contrast("white", "WCAG21");
@@ -150,45 +110,95 @@ const contrasted = (color: string, percentage = 0.8) => {
   return isDark(c) ? c.mix("white", percentage) : c.mix("black", percentage);
 };
 
-const toVariables = (
-  t: Theme & Required<ThemeColors>,
-): [string, string][] => {
-  const toValue = (color: string | ReturnType<typeof darken>) => {
+const toVariables = (t: Theme & Required<ThemeColors>): [string, string][] => {
+  const toValue = (color: string | ReturnType<typeof lighten>) => {
     const [l, c, h] = new Color(color).oklch;
 
     return `${(l * 100).toFixed(0)}% ${c.toFixed(2)} ${(h || 0).toFixed(0)}deg`;
   };
 
+  // console.log("primary", t["primary"]);
+
   const colorVariables = Object.entries({
+    "--primary-500": t["primary"],
+    "--primary-400": t["primaryShades"]?.["400"] ?? lighten(t["primary"], 0.07),
+    "--primary-300": t["primaryShades"]?.["300"] ?? lighten(t["primary"], 0.14),
+    "--primary-200": t["primaryShades"]?.["200"] ?? lighten(t["primary"], 0.21),
+    "--primary-100": t["primaryShades"]?.["100"] ?? lighten(t["primary"], 0.28),
+
+    "--secondary-500": t["secondary"],
+    "--secondary-400": t["secondaryShades"]?.["400"] ??
+      lighten(t["secondary"], 0.07),
+    "--secondary-300": t["secondaryShades"]?.["300"] ??
+      lighten(t["secondary"], 0.14),
+    "--secondary-200": t["secondaryShades"]?.["200"] ??
+      lighten(t["secondary"], 0.21),
+    "--secondary-100": t["secondaryShades"]?.["100"] ??
+      lighten(t["secondary"], 0.28),
+
+    "--neutral-700": t["neutral"],
+    "--neutral-600": t["neutralShades"]?.["600"] ?? lighten(t["neutral"], 0.07),
+    "--neutral-500": t["neutralShades"]?.["500"] ?? lighten(t["neutral"], 0.14),
+    "--neutral-400": t["neutralShades"]?.["400"] ?? lighten(t["neutral"], 0.21),
+    "--neutral-300": t["neutralShades"]?.["300"] ?? lighten(t["neutral"], 0.28),
+    "--neutral-200": t["neutralShades"]?.["200"] ?? lighten(t["neutral"], 0.35),
+    "--neutral-100": t["base"],
+
+    "--danger-500": t["danger"],
+    "--danger-400": t["dangerShades"]?.["400"] ?? lighten(t["danger"], 0.07),
+    "--danger-300": t["dangerShades"]?.["300"] ?? lighten(t["danger"], 0.14),
+    "--danger-200": t["dangerShades"]?.["200"] ?? lighten(t["danger"], 0.21),
+    "--danger-100": t["dangerShades"]?.["100"] ?? lighten(t["danger"], 0.28),
+
+    "--warning-500": t["warning"],
+    "--warning-400": t["warningShades"]?.["400"] ?? lighten(t["warning"], 0.07),
+    "--warning-300": t["warningShades"]?.["300"] ?? lighten(t["warning"], 0.14),
+    "--warning-200": t["warningShades"]?.["200"] ?? lighten(t["warning"], 0.21),
+    "--warning-100": t["warningShades"]?.["100"] ?? lighten(t["warning"], 0.28),
+
+    "--success-500": t["success"],
+    "--success-400": t["successShades"]?.["400"] ?? lighten(t["success"], 0.07),
+    "--success-300": t["successShades"]?.["300"] ?? lighten(t["success"], 0.14),
+    "--success-200": t["successShades"]?.["200"] ?? lighten(t["success"], 0.21),
+    "--success-100": t["successShades"]?.["100"] ?? lighten(t["success"], 0.28),
+
+    "--info-500": t["info"],
+    "--info-400": t["infoShades"]?.["400"] ?? lighten(t["info"], 0.07),
+    "--info-300": t["infoShades"]?.["300"] ?? lighten(t["info"], 0.14),
+    "--info-200": t["infoShades"]?.["200"] ?? lighten(t["info"], 0.21),
+    "--info-100": t["infoShades"]?.["100"] ?? lighten(t["info"], 0.28),
+
     "--p": t["primary"],
-    "--pc": t["primary-content"] ?? contrasted(t["primary"]),
+    "--pc": t["primaryShades"]?.["100"] ?? contrasted(t["primary"]),
 
     "--s": t["secondary"],
-    "--sc": t["secondary-content"] ?? contrasted(t["secondary"]),
+    "--sc": t["secondaryShades"]?.["100"] ?? contrasted(t["secondary"]),
 
-    "--a": t["tertiary"],
-    "--ac": t["tertiary-content"] ?? contrasted(t["tertiary"]),
+    "--a": t["secondary"],
+    "--ac": t["secondaryShades"]?.["100"] ?? contrasted(t["secondary"]),
 
     "--n": t["neutral"],
-    "--nc": t["neutral-content"] ?? contrasted(t["neutral"]),
+    "--nc": t["base"] ?? contrasted(t["neutral"]),
 
-    "--b1": t["base-100"],
-    "--b2": t["base-200"] ?? darken(t["base-100"], 0.07),
-    "--b3": t["base-300"] ?? darken(t["base-100"], 0.14),
-    "--bc": t["base-content"] ?? contrasted(t["base-100"]),
+    "--b1": t["base"] ?? contrasted(t["neutral"]),
+    "--b2": t["neutralShades"]?.["200"] ?? lighten(t["base"], 0.07),
+    "--b3": t["neutralShades"]?.["300"] ?? lighten(t["base"], 0.14),
+    "--bc": t["neutral"],
 
     "--su": t["success"],
-    "--suc": t["success-content"] ?? contrasted(t["success"]),
+    "--suc": t["successShades"]?.["100"] ?? contrasted(t["success"]),
 
     "--wa": t["warning"],
-    "--wac": t["warning-content"] ?? contrasted(t["warning"]),
+    "--wac": t["warningShades"]?.["100"] ?? contrasted(t["warning"]),
 
-    "--er": t["error"],
-    "--erc": t["error-content"] ?? contrasted(t["error"]),
+    "--er": t["danger"],
+    "--erc": t["dangerShades"]?.[100] ?? contrasted(t["warning"]),
 
     "--in": t["info"],
-    "--inc": t["info-content"] ?? contrasted(t["info"]),
-  }).map(([key, color]) => [key, toValue(color)] as [string, string]);
+    "--inc": t["infoShades"]?.["100"] ?? contrasted(t["info"]),
+  }).map(([key, color]) => {
+    return [key, toValue(color)] as [string, string];
+  });
 
   const miscellaneousVariables = Object.entries({
     "--rounded-box": t["--rounded-box"],
@@ -206,16 +216,7 @@ const toVariables = (
 };
 
 const defaultTheme = {
-  "primary": "oklch(1 0 0)",
-  "secondary": "oklch(1 0 0)",
-  "tertiary": "oklch(1 0 0)",
-  "neutral": "oklch(1 0 0)",
-  "base-100": "oklch(1 0 0)",
-  "info": "oklch(1 0 0)",
-  "success": "oklch(0.9054 0.1546 194.7689)",
-  "warning": "oklch(1 0 0)",
-  "error": "oklch(1 0 0)",
-
+  ...defaultColors,
   "--rounded-box": "1rem", // border radius rounded-box utility class, used in card and other large boxes
   "--rounded-btn": "0.2rem" as const, // border radius rounded-btn utility class, used in buttons and similar element
   "--rounded-badge": "1.9rem", // border radius rounded-badge utility class, used in badges and similar
@@ -227,27 +228,17 @@ const defaultTheme = {
   "--tab-radius": "0.5rem", // border radius of tabs
 };
 
-/**
- * This section merges the DESIGN_SYTEM variable with incoming props into a css sheet with variables, i.e.
- * this function transforms props into
- *
- * :root {
- *   --color-primary: #FFFFFF;
- *   --color-secondary: "#161616"
- * }
- */
 function Section({
-  mainColors,
+  colors,
   complementaryColors,
   buttonStyle,
   otherStyles,
   font,
-  colorScheme,
 }: Props) {
   const theme = {
     ...defaultTheme,
+    ...colors,
     ...complementaryColors,
-    ...mainColors,
     ...buttonStyle,
     ...otherStyles,
   };
@@ -259,201 +250,31 @@ function Section({
       font?.family ||
       "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif",
     ],
-  ]
-    .map(([name, value]) => ({ name, value }));
+  ].map(([name, value]) => ({ name, value }));
 
   return (
-    <SiteTheme
-      fonts={font ? [font] : undefined}
-      variables={variables}
-      colorScheme={colorScheme}
-    />
+    <>
+      <SiteTheme fonts={font ? [font] : undefined} variables={variables} />
+    </>
   );
 }
 
 export function Preview(props: Props) {
-  return (
-    <>
-      <Section {...props} />
-      <div class="grid grid-flow-row md:grid-flow-col">
-        <div class="flex flex-col gap-4 p-4 bg-base-100 text-base-content">
-          <div class="text-xl">The quick brown fox jumps over the lazy dog</div>
-          {" "}
-          <button class="btn">Default button</button>{" "}
-          <div class="flex flex-col gap-1">
-            <div class="flex flex-wrap gap-1">
-              <button class="btn btn-sm">A</button>{" "}
-              <button class="btn btn-sm btn-primary">A</button>{" "}
-              <button class="btn btn-sm btn-secondary">A</button>{" "}
-              <button class="btn btn-sm btn-accent">A</button>
-              {" "}
-            </div>
-            <div class="flex flex-wrap gap-1">
-              <button class="btn btn-sm btn-outline">A</button>{" "}
-              <button class="btn btn-sm btn-primary btn-outline">A</button>{" "}
-              <button class="btn btn-sm btn-secondary btn-outline">A</button>
-              {" "}
-              <button class="btn btn-sm btn-accent btn-outline">A</button>
-              {" "}
-            </div>
-            {" "}
-          </div>
-          <div class="flex flex-col gap-2">
-            <span class="badge">Base</span>{" "}
-            <span class="badge badge-primary">Primary</span>{" "}
-            <span class="badge badge-secondary">Secondary</span>{" "}
-            <span class="badge badge-accent">Accent</span>
-            {" "}
-          </div>{" "}
-          <div class="flex flex-col">
-            <div class="text-base">Content</div>
-            <div class="text-base text-primary">Primary</div>
-            <div class="text-base text-secondary">Secondary</div>
-            <div class="text-base text-accent">Accent</div>
-          </div>
-          {" "}
-        </div>{" "}
-        <div class="flex flex-col gap-4 p-4 bg-base-content text-base-100">
-          <div class="text-xl">The quick brown fox jumps over the lazy dog</div>
-          {" "}
-          <button class="btn">Default button</button>{" "}
-          <div class="flex flex-col gap-1">
-            <div class="flex flex-wrap gap-1">
-              <button class="btn btn-sm">A</button>{" "}
-              <button class="btn btn-sm btn-primary">A</button>{" "}
-              <button class="btn btn-sm btn-secondary">A</button>{" "}
-              <button class="btn btn-sm btn-accent">A</button>
-              {" "}
-            </div>
-            <div class="flex flex-wrap gap-1">
-              <button class="btn btn-sm btn-primary btn-outline">A</button>{" "}
-              <button class="btn btn-sm btn-secondary btn-outline">A</button>
-              {" "}
-              <button class="btn btn-sm btn-accent btn-outline">A</button>
-              {" "}
-            </div>
-            {" "}
-          </div>
-          <div class="flex flex-col gap-2">
-            <span class="badge">Base</span>{" "}
-            <span class="badge badge-primary">Primary</span>{" "}
-            <span class="badge badge-secondary">Secondary</span>{" "}
-            <span class="badge badge-accent">Accent</span>
-            {" "}
-          </div>{" "}
-          <div class="flex flex-col">
-            <div class="text-base">Content</div>
-            <div class="text-base text-primary">Primary</div>
-            <div class="text-base text-secondary">Secondary</div>
-            <div class="text-base text-accent">Accent</div>
-          </div>
-          {" "}
-        </div>{" "}
-        <div class="flex flex-col gap-4 p-4 bg-primary text-primary-content">
-          <div class="text-xl">The quick brown fox jumps over the lazy dog</div>
-          {" "}
-          <button class="btn">Default button</button>{" "}
-          <div class="flex flex-col gap-1">
-            <div class="flex flex-wrap gap-1">
-              <button class="btn btn-sm">A</button>{" "}
-              <button class="btn btn-sm btn-secondary">A</button>{" "}
-              <button class="btn btn-sm btn-accent">A</button>
-              {" "}
-            </div>
-            <div class="flex flex-wrap gap-1">
-              <button class="btn btn-sm btn-outline">A</button>{" "}
-              <button class="btn btn-sm btn-secondary btn-outline">A</button>
-              {" "}
-              <button class="btn btn-sm btn-accent btn-outline">A</button>
-              {" "}
-            </div>
-            {" "}
-          </div>
-          <div class="flex flex-col gap-2">
-            <span class="badge">Base</span>{" "}
-            <span class="badge badge-secondary">Secondary</span>{" "}
-            <span class="badge badge-accent">Accent</span>
-            {" "}
-          </div>{" "}
-          <div class="flex flex-col">
-            <div class="text-base">Content</div>
-            <div class="text-base text-secondary">Secondary</div>
-            <div class="text-base text-accent">Accent</div>
-          </div>
-          {" "}
-        </div>{" "}
-        <div class="flex flex-col gap-4 p-4 bg-secondary text-secondary-content">
-          <div class="text-xl">The quick brown fox jumps over the lazy dog</div>
-          {" "}
-          <button class="btn">Default button</button>{" "}
-          <div class="flex flex-col gap-1">
-            <div class="flex flex-wrap gap-1">
-              <button class="btn btn-sm">A</button>{" "}
-              <button class="btn btn-sm btn-primary">A</button>{" "}
-              <button class="btn btn-sm btn-accent">A</button>
-              {" "}
-            </div>
-            <div class="flex flex-wrap gap-1">
-              <button class="btn btn-sm btn-outline">A</button>{" "}
-              <button class="btn btn-sm btn-primary btn-outline">A</button>{" "}
-              <button class="btn btn-sm btn-accent btn-outline">A</button>
-              {" "}
-            </div>
-            {" "}
-          </div>
-          <div class="flex flex-col gap-2">
-            <span class="badge">Base</span>{" "}
-            <span class="badge badge-primary">Primary</span>{" "}
-            <span class="badge badge-accent">Accent</span>
-            {" "}
-          </div>{" "}
-          <div class="flex flex-col">
-            <div class="text-base">Content</div>
-            <div class="text-base text-primary">Primary</div>
-            <div class="text-base text-accent">Accent</div>
-          </div>
-          {" "}
-        </div>{" "}
-        <div class="flex flex-col gap-4 p-4 bg-accent text-accent-content">
-          <div class="text-xl">The quick brown fox jumps over the lazy dog</div>
-          {" "}
-          <button class="btn">Default button</button>{" "}
-          <div class="flex flex-col gap-1">
-            <div class="flex flex-wrap gap-1">
-              <button class="btn btn-sm">A</button>{" "}
-              <button class="btn btn-sm btn-primary">A</button>{" "}
-              <button class="btn btn-sm btn-secondary">A</button>
-              {" "}
-            </div>
-            <div class="flex flex-wrap gap-1">
-              <button class="btn btn-sm btn-outline">A</button>{" "}
-              <button class="btn btn-sm btn-primary btn-outline">A</button>{" "}
-              <button class="btn btn-sm btn-secondary btn-outline">A</button>
-              {" "}
-            </div>
-            {" "}
-          </div>
-          <div class="flex flex-col gap-2">
-            <span class="badge">Base</span>{" "}
-            <span class="badge badge-primary">Primary</span>{" "}
-            <span class="badge badge-secondary">Secondary</span>
-            {" "}
-          </div>{" "}
-          <div class="flex flex-col">
-            <div class="text-base">Content</div>
-            <div class="text-base text-primary">Primary</div>
-            <div class="text-base text-secondary">Secondary</div>
-          </div>
-          {" "}
-        </div>
-        {" "}
+  const { page } = props;
+
+  if (!page) {
+    return (
+      <div>
+        <h1>Please select a page!</h1>
       </div>
-      {props.font?.family && (
-        <div class="text-center py-2">
-          Font: {props.font.family}
-        </div>
-      )}
-    </>
+    );
+  }
+
+  return (
+    <div>
+      <page.Component {...page.props} />
+      <Section {...props} />
+    </div>
   );
 }
 
